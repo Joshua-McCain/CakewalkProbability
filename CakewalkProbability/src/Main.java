@@ -2,21 +2,26 @@ import java.util.Random;
 
 public class Main {
 
-    //**Keep track of player wins**
+    //**Keep track of player wins and time variables**
     private static final int playerCount = 4;
     private static float[] playerPositionWins = new float[playerCount];
+    //In seconds
+    private static final float minTimePerJump = 1f;
+    private static final float maxTimePerJump = 3f;
+    private static final float knownJumpTime = 0.5f;
+    //index 0 for a normal unknown jump, index 1 for known jumps
+    private static float[] gameplayJumps = new float[2];
 
     //**Modifiable variables to get different outcomes**
     private static final int totalGames = 100000;
     //Number of times a player has to jump before winning
-    private static final int numberOfRows = 10;
+    private static final int numberOfRows = 8;
     //Chance that the player will forget what platform to jump to if there are still 2 options available
     //Value must be from [0, 1)
-    private static final float forgetChance = 0.00f;
+    private static final float forgetChance = 0.1f;
 
     public static void main(String[] args){
         Random rand = new Random();
-
 
         for(int i = 0; i < totalGames; i++){
             //Game state vars
@@ -54,6 +59,8 @@ public class Main {
                             playerGuess = rand.nextInt(2);
                         }
 
+                        gameplayJumps[0]++;
+
                         //If the player guess did not succeed
                         if(truePlatformSequence[j] != playerGuess){
                             //Only 1 option to choose from in the future
@@ -68,6 +75,9 @@ public class Main {
                             //Start the next player's turn
                             break;
                         }
+                    }
+                    else{ //If plat is already known, aka other plat has fallen
+                        gameplayJumps[1]++;
                     }
                     //Check to see if the player has won
                     if(j == numberOfRows - 1){
@@ -85,5 +95,10 @@ public class Main {
         for(int i = 0; i < playerCount; i++){
             System.out.printf("Player %d Win Percentage: %f%%\n", i + 1, playerPositionWins[i]/(float)totalGames);
         }
+        float knownJumpsInSec = gameplayJumps[1] * knownJumpTime;
+        //Get average times in minutes
+        float minAverageTime = ((gameplayJumps[0] * minTimePerJump + knownJumpsInSec) / (float)totalGames) / 60f;
+        float maxAverageTime = ((gameplayJumps[0] * maxTimePerJump + knownJumpsInSec) / (float)totalGames) / 60f;
+        System.out.printf("Min Average Time (in minutes): %.2f\nMax Average Time (in minutes): %.2f", minAverageTime, maxAverageTime);
     }
 }
